@@ -18,6 +18,7 @@
   },
   "homepage": "https://github.com/M-51/pwa-boilerplate#readme",
   "dependencies": {
+    "ejs": "^2.5.7",
     "express": "^4.16.2",
     "npm": "^5.7.1"
   },

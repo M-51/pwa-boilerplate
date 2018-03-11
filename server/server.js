@@ -1,29 +1,49 @@
 const express = require('express');
-const path = require('path');
+const fs = require('fs');
+const { promisify } = require('util');
 
 const app = express();
 
 app.use('/static', express.static('server/static'));
 app.use('/', express.static('server/worker'));
+app.set('views', 'server/views');
+app.set('view engine', 'ejs');
 
-app.get('/', (req, res) => {
-    res.sendFile(path.join(__dirname, './html/index.html'));
-});
-app.get('/page1', (req, res) => {
-    res.sendFile(path.join(__dirname, './html/page1.html'));
-});
-app.get('/page2', (req, res) => {
-    res.sendFile(path.join(__dirname, './html/page2.html'));
-});
+const readFile = promisify(fs.readFile);
+async function getJson(file) {
+    const data = await readFile(`server/json/${file}.json`, { encoding: 'utf8' });
+    return JSON.parse(data);
+}
 
 app.get('/api/', (req, res) => {
-    res.json({ content: 'index content', title: 'index', path: '/' });
+    getJson('home').then((json) => {
+        res.json(json);
+    }, () => {
+        res.status(404).end();
+    });
 });
-app.get('/api/page1', (req, res) => {
-    res.json({ content: 'page 1 content', title: 'page 1', path: '/page1' });
+app.get('/api/:json', (req, res) => {
+    getJson(req.params.json).then((json) => {
+        res.json(json);
+    }, () => {
+        res.status(404).end();
+    });
 });
-app.get('/api/page2', (req, res) => {
-    res.json({ content: 'page 2 content', title: 'page2', path: '/page2' });
+
+app.get('/', (req, res) => {
+    getJson('home').then((json) => {
+        res.render('base', json);
+    }, () => {
+        res.status(404).end();
+    });
+});
+
+app.get('/:page', (req, res) => {
+    getJson(req.params.page).then((json) => {
+        res.render('base', json);
+    }, () => {
+        res.status(404).end();
+    });
 });
 
 app.listen(3000, () => console.log('Listening on port 3000!'));
