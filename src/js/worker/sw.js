@@ -4,6 +4,9 @@ if ('serviceWorker' in navigator) {
     navigator.serviceWorker.register('/sw.js', { scope: '/' });
     console.log('registered');
 }
+self.addEventListener('activate', (event) => {
+    event.waitUntil(clients.claim());
+});
 
 self.addEventListener('install', () => {
     console.log('installed');

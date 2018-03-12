@@ -20,15 +20,19 @@ async function handleAjaxResponse(response, addToHistory = true) {
 
 /* intercept clicks on links, and send request */
 
-// if ajax, add header to request
-function fetchAjax(url, headers = { 'X-Requested-With': 'XMLHttpRequest' }) {
-    return fetch(url, { headers: new Headers(headers) });
+function prepareURL(url) {
+    const newURL = new URL(url);
+    newURL.pathname = newURL.pathname === '/' ? '/api' : `/api${newURL.pathname}`;
+    return newURL;
 }
 
 // catch clicks
 function intercept(e) {
-    e.preventDefault();
-    fetchAjax(e.target.href).then(handleAjaxResponse);
+    const url = prepareURL(e.target.href);
+    if (url) {
+        e.preventDefault();
+        fetch(url).then(handleAjaxResponse);
+    }
 }
 
 // start listening for clicks
@@ -39,11 +43,17 @@ function startListening() {
 /* history API */
 
 // save initial page url
-const initialHistoryState = window.location.pathname;
+const initialHistoryState = window.location;
 
 // handle history events
 function handleHistory(event) {
-    fetchAjax(event.state || initialHistoryState).then((response) => {
+    let url;
+    if (event.state) {
+        url = prepareURL(new URL(event.state, window.location.origin));
+    } else {
+        url = prepareURL(initialHistoryState);
+    }
+    fetch(url).then((response) => {
         handleAjaxResponse(response, false);
     });
 }

@@ -1,13 +1,19 @@
 /* history API */
-import { fetchAjax } from './request';
 import handleAjaxResponse from './response';
+import { prepareURL } from './request';
 
 // save initial page url
-const initialHistoryState = window.location.pathname;
+const initialHistoryState = window.location;
 
 // handle history events
 function handleHistory(event) {
-    fetchAjax(event.state || initialHistoryState).then((response) => {
+    let url;
+    if (event.state) {
+        url = prepareURL(new URL(event.state, window.location.origin));
+    } else {
+        url = prepareURL(initialHistoryState);
+    }
+    fetch(url).then((response) => {
         handleAjaxResponse(response, false);
     });
 }

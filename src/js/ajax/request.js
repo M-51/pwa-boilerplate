@@ -1,15 +1,19 @@
 /* intercept clicks on links, and send request */
 import handleAjaxResponse from './response';
 
-// if ajax, add header to request
-function fetchAjax(url, headers = { 'X-Requested-With': 'XMLHttpRequest' }) {
-    return fetch(url, { headers: new Headers(headers) });
+function prepareURL(url) {
+    const newURL = new URL(url);
+    newURL.pathname = newURL.pathname === '/' ? '/api' : `/api${newURL.pathname}`;
+    return newURL;
 }
 
 // catch clicks
 function intercept(e) {
-    e.preventDefault();
-    fetchAjax(e.target.href).then(handleAjaxResponse);
+    const url = prepareURL(e.target.href);
+    if (url) {
+        e.preventDefault();
+        fetch(url).then(handleAjaxResponse);
+    }
 }
 
 // start listening for clicks
@@ -17,4 +21,4 @@ function startListening() {
     [...document.links].forEach((link) => { link.addEventListener('click', intercept); });
 }
 
-export { fetchAjax, startListening };
+export { prepareURL, startListening };
